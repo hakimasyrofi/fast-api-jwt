@@ -17,29 +17,19 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 fake_users_db = {
     "asdf": {
         "username": "asdf",
-        "full_name": "John Doe",
-        "email": "johndoe@example.com",
-        "hashed_password": "$2a$10$kkTZ4TL0tTlayVG6w5eSWOkPmDKf0AeiHhtgYZ0vF90DcBQP4uK/W",
-        "disabled": False,
+        "hashed_password": "$2a$10$kkTZ4TL0tTlayVG6w5eSWOkPmDKf0AeiHhtgYZ0vF90DcBQP4uK/W"
     }
 }
-
 
 class Token(BaseModel):
     access_token: str
     token_type: str
 
-
 class TokenData(BaseModel):
     username: Optional[str] = None
 
-
 class User(BaseModel):
     username: str
-    email: Optional[str] = None
-    full_name: Optional[str] = None
-    disabled: Optional[bool] = None
-
 
 class UserInDB(User):
     hashed_password: str

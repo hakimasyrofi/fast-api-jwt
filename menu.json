@@ -1,1 +1,8 @@
-{"menu": [{"id": 1, "name": "Sop Buntut"}, {"id": 2, "name": "telur dadar"}, {"id": 3, "name": "Dendeng Batokok"}, {"id": 4, "name": "Nasi Kucing"}]}
+{
+"menu": [
+    {"id": 1, "name": "Sop Buntut"}, 
+    {"id": 2, "name": "telur dadar"}, 
+    {"id": 3, "name": "Dendeng Batokok"}, 
+    {"id": 4, "name": "Nasi Kucing"}
+    ]
+}
