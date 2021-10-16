@@ -131,7 +131,6 @@ async def read_own_items(current_user: User = Depends(get_current_active_user)):
 async def read_all_menu(current_user: User = Depends(get_current_active_user)):
 	return jsonData['menu']
 
-
 @app.get('/menu/{item_id}')
 async def read_menu(item_id: int, current_user: User = Depends(get_current_active_user)):
 	for menu_item in jsonData['menu']:
