@@ -6,13 +6,17 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
+import json
 
+json_filename="menu.json"
+
+with open(json_filename,"r") as read_file:
+	jsonData = json.load(read_file)
 # to get a string like this run:
 # openssl rand -hex 32
 SECRET_KEY = "4b97e40df461128071d1abd62f3714eb09bac4e06c01b89e0aeef1ff46b17fc8"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
 
 fake_users_db = {
     "asdf": {
@@ -21,6 +25,10 @@ fake_users_db = {
         "disabled": False,
     }
 }
+
+class Item(BaseModel):
+	id: int
+	name: str
 
 class Token(BaseModel):
     access_token: str
@@ -143,3 +151,57 @@ async def read_users_me(current_user: User = Depends(get_current_active_user)):
 @app.get("/users/me/items/")
 async def read_own_items(current_user: User = Depends(get_current_active_user)):
     return [{"item_id": "Foo", "owner": current_user.username}]
+
+#----------------------------------------------
+
+@app.get('/menu')
+async def read_all_menu():
+	return jsonData['menu']
+
+
+@app.get('/menu/{item_id}')
+async def read_menu(item_id: int):
+	for menu_item in jsonData['menu']:
+		if menu_item['id'] == item_id:
+			return menu_item
+	raise HTTPException(
+		status_code=404, detail=f'item not found'
+	)
+
+@app.post('/menu')
+async def add_menu(item: Item):
+	item_dict = item.dict()
+	item_found = False
+	for menu_item in jsonData['menu']:
+		if menu_item['id'] == item_dict['id']:
+			item_found = True
+			return "Menu ID "+str(item_dict['id'])+" exists."
+	
+	if not item_found:
+		jsonData['menu'].append(item_dict)
+		with open(json_filename,"w") as write_file:
+			json.dump(jsonData, write_file)
+
+		return item_dict
+	raise HTTPException(
+		status_code=404, detail=f'item not found'
+	)
+
+@app.patch('/menu')
+async def update_menu(item: Item):
+	item_dict = item.dict()
+	item_found = False
+	for menu_idx, menu_item in enumerate(jsonData['menu']):
+		if menu_item['id'] == item_dict['id']:
+			item_found = True
+			jsonData['menu'][menu_idx]=item_dict
+			
+			with open(json_filename,"w") as write_file:
+				json.dump(jsonData, write_file)
+			return "updated"
+	
+	if not item_found:
+		return "Menu ID not found."
+	raise HTTPException(
+		status_code=404, detail=f'item not found'
+	)
