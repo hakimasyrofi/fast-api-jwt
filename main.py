@@ -8,8 +8,11 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 import json
 
-json_filename="menu.json"
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+app = FastAPI()
 
+json_filename="menu.json"
 with open(json_filename,"r") as read_file:
 	jsonData = json.load(read_file)
 
@@ -42,10 +45,6 @@ class User(BaseModel):
 
 class UserInDB(User):
     hashed_password: str
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-app = FastAPI()
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
