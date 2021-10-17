@@ -12,16 +12,15 @@ json_filename="menu.json"
 
 with open(json_filename,"r") as read_file:
 	jsonData = json.load(read_file)
-# to get a string like this run:
-# openssl rand -hex 32
-SECRET_KEY = "4b97e40df461128071d1abd62f3714eb09bac4e06c01b89e0aeef1ff46b17fc8"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-fake_users_db = {
+SECRET_KEY = "4b97e40df461128071d1abd62f3714eb09bac4e06c01b89e0aeef1ff46b17fc8" #openssl rand -hex 32
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 20
+
+admin = {
     "asdf": {
         "username": "asdf",
-        "hashed_password": "$2a$10$kkTZ4TL0tTlayVG6w5eSWOkPmDKf0AeiHhtgYZ0vF90DcBQP4uK/W",
+        "hashed_password": "$2a$10$kkTZ4TL0tTlayVG6w5eSWOkPmDKf0AeiHhtgYZ0vF90DcBQP4uK/W", #asdf encrypt with bcrypt hash
         "disabled": False,
     }
 }
@@ -59,8 +58,8 @@ def get_user(db, username: str):
         user_dict = db[username]
         return UserInDB(**user_dict)
 
-def authenticate_user(fake_db, username: str, password: str):
-    user = get_user(fake_db, username)
+def authenticate_user(admin_db, username: str, password: str):
+    user = get_user(admin_db, username)
     if not user:
         return False
     if not verify_password(password, user.hashed_password):
@@ -91,7 +90,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    user = get_user(fake_users_db, username=token_data.username)
+    user = get_user(admin, username=token_data.username)
     if user is None:
         raise credentials_exception
     return user
@@ -103,7 +102,7 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
 
 @app.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = authenticate_user(fake_users_db, form_data.username, form_data.password)
+    user = authenticate_user(admin, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -115,17 +114,6 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
-
-@app.get("/users/me/", response_model=User)
-async def read_users_me(current_user: User = Depends(get_current_active_user)):
-    return current_user
-
-
-@app.get("/users/me/items/")
-async def read_own_items(current_user: User = Depends(get_current_active_user)):
-    return [{"item_id": "Foo", "owner": current_user.username}]
-
-#----------------------------------------------
 
 @app.get('/menu')
 async def read_all_menu(current_user: User = Depends(get_current_active_user)):
@@ -148,13 +136,13 @@ async def add_menu(item: Item, current_user: User = Depends(get_current_active_u
 		if menu_item['id'] == item_dict['id']:
 			item_found = True
 			return "Menu ID "+str(item_dict['id'])+" exists."
-	
+
 	if not item_found:
 		jsonData['menu'].append(item_dict)
 		with open(json_filename,"w") as write_file:
 			json.dump(jsonData, write_file)
-
 		return item_dict
+
 	raise HTTPException(
 		status_code=404, detail=f'item not found'
 	)
